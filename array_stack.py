@@ -77,7 +77,7 @@ def concave_hull(points,a,compar):
     hull_pts = [poly.exterior.coords.xy for poly in list(hull)]
     if len(hull) != 0: 
         fig, ax = plt.subplots()
-        ax.scatter(hull_pts[0][0], hull_pts[0][1], color='red',s=1)
+        #ax.scatter(hull_pts[0][0], hull_pts[0][1], color='red',s=1)
         compar.plot(ax=ax,facecolor='blue',edgecolor='red')
         ax.add_patch(PolygonPatch(hull, fill=False, color='k'))
         plt.show()
@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
 
     files = ['ndmi_raster','asm_raster','combo_raster','buff_30km','buff_8km']
-    names = ['ndmi','dam','combo','buff''small_buff'] 
+    names = ['ndmi','dam','combo','buff','small_buff'] 
     pred = {}
     transformers = []
     cols_list = []
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     for f,n in zip(files,names):
         
         file_name_raster = f
-        src_ds = gdal.Open('outputs/final/proj'+file_name_raster+'.tif')
+        src_ds = gdal.Open('outputs/final/proj/'+file_name_raster+'.tif')
         rb1=src_ds.GetRasterBand(1)
         cols = src_ds.RasterXSize
         cols_list.append(cols)
@@ -113,27 +113,32 @@ if __name__ == "__main__":
         data = rb1.ReadAsArray(0, 0, cols, rows)
         print('Success in reading file.........................................') 
         pred[n] = data.flatten()
+        print(len(data.flatten()))
         transform=src_ds.GetGeoTransform()
         transformers.append(transform)
-
+    
     
     pred['year'] = np.ones(np.shape(pred['ndmi']))+2014
-
+    
     col_num = cols_list[0]
     row_num = rows_list[0]
     ulx, xres, xskew, uly, yskew, yres  = transformers[0]
-    lrx = ulx + (row_num * xres)
-    lry = uly + (col_num * yres)
+
+    lrx = ulx + (row_num * abs(xres))
+    lry = uly + (col_num * abs(yres))
 
 
-    Yi = np.linspace(np.min([uly,lry]), np.max([uly,lry]), num_row+1)
-    Xi = np.linspace(np.min([ulx,lrx]), np.max([ulx,lrx]), num_col+1)
-
-    Xi, Yi = np.meshgrid(Xi, Yi)
-    Xi, Yi = Xi.flatten(), Yi.flatten()
-
+    Yi = np.linspace(np.min([uly,lry]), np.max([uly,lry]), row_num)
+    Xi = np.linspace(np.min([ulx,lrx]), np.max([ulx,lrx]), col_num)
+    
+    mgrid = np.rot90(np.fliplr(np.meshgrid(Xi, Yi))) #Transpose it? 
+    Xi, Yi = mgrid[:,0].flatten(), mgrid[:,1].flatten()
+    print(Xi[0])
+    print(Yi[0]) 
+  
     pred['lon'] = Xi
-    pred['lat'] = Yi 
+    pred['lat'] = Yi
+
     
     df = pd.DataFrame(pred)
     
@@ -141,6 +146,25 @@ if __name__ == "__main__":
     df_save = df 
     df = df[df['combo'] != 0] #exclude no species
     #df = df[df['dam'] != 0].dropna(how='any')
+
+    #Just checking!!
+
+    fig, ax = plt.subplots(figsize=(15, 15))
+    na_map = gpd.read_file('data/2014_ON_fixed_proj102001.shp')
+    
+    crs = {'init': 'epsg:4326'}
+    
+    dfs = df[df['dam'] == 2]
+    sc= plt.scatter(dfs['lon'],dfs['lat'],c=dfs['dam'],cmap='plasma',s=1,alpha=0.25)
+    na_map.plot(ax=ax, facecolor="none", edgecolor='k',linewidth=1, zorder=14, alpha=1)
+
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    plt.xlim(np.min([ulx,lrx]), np.max([ulx,lrx]))
+    plt.ylim(np.min([uly,lry]), np.max([uly,lry]))
+    
+    cb = plt.colorbar(sc)
+    plt.show()
     
     lengths = []
 
@@ -208,19 +232,22 @@ if __name__ == "__main__":
     total = pd.concat([rem_track,add_track])
 
     fig, ax = plt.subplots(figsize=(15, 15))
-    na_map = gpd.read_file('data/'+str(2014)+'_ON_wgs84.shp')
+    na_map = gpd.read_file('data/2014_ON_fixed_proj102001.shp')
     
     crs = {'init': 'epsg:4326'}
 
-    rem_track = rem_track[rem_track['pred'] > 0]
+    #rem_track = rem_track[rem_track['pred'] > 0]
     
 
-    plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=1,alpha=0.25)
+    sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=1,alpha=0.25)
     na_map.plot(ax=ax, facecolor="none", edgecolor='k',linewidth=1, zorder=14, alpha=1)
 
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-
+    plt.xlim(np.min([ulx,lrx]), np.max([ulx,lrx]))
+    plt.ylim(np.min([uly,lry]), np.max([uly,lry]))
+    
+    cb = plt.colorbar(sc, spacing='proportional',ticks=[0,2,3])
     plt.show()
 
 
