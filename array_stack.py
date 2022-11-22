@@ -96,7 +96,7 @@ def concave_hull(points,a,compar):
 if __name__ == "__main__":
 
 
-    files = ['ndmi_raster','asm_raster','combo_raster','buff_30km','buff_8km','bf_raster','age_raster']
+    files = ['ndmi_2014_corr','asm_raster_2014','combo_raster_2014','buff_30km_2014_corr','buff_8km_2014','bf_2014','age_2014']
     names = ['ndmi','dam','combo','buff','small_buff','bf','age'] 
     pred = {}
     transformers = []
@@ -155,27 +155,46 @@ if __name__ == "__main__":
     df = pd.DataFrame(pred)
     
     df = df[df['buff'] >= 1].dropna(how='any')
-    df_save = df 
     df = df[df['combo'] != 0] #exclude no species
-    #df = df[df['dam'] != 0].dropna(how='any')
+    df = df[df['dam'] != 1] #Strange no data value
+    df_save = df 
+    #Distance Matrix
+
+    #Get the pixel centroids of initiation
+##    cent = gpd.read_file('outputs/final/proj/temp/centroids_of_initiation.shp')
+##    aff_x = cent['geometry'].x
+##    aff_y = cent['geometry'].y
+##
+##    from scipy.spatial import distance
+##    from scipy.spatial import cKDTree
+##    
+##    points = [(x,y,) for x, y in zip(aff_x,aff_y)]
+##    ap = [(x,y,) for x, y in zip(df['lon'],df['lat'])]
+##    #mdist = distance.cdist(np.array(points), np.array(points), 'euclidean')
+##    #distm = np.amin(mdist, axis=1)
+##    min_dists, min_dist_idx = cKDTree(np.array(points)).query(np.array(ap), 1)
+##    
+##    df['spatial_auto'] = min_dists
+    #df['spatial_auto'] = np.where(df['small_buff'].eq(1), 0, df['spatial_auto']) #set equal probability inside 8km buff --> no overfits
+    #Done Distance Matrix
 
     #Just checking!!
 
-    fig, ax = plt.subplots(figsize=(15, 15))
-    na_map = gpd.read_file('data/2014_ON_fixed_proj102001.shp')
-    
-    #crs = {'init': 'epsg:4326'}
-    
-    dfs = df[df['dam'] >= 2]
-    sc= plt.scatter(dfs['lon'],dfs['lat'],c=dfs['dam'],cmap='plasma',s=1,alpha=0.25)
-    na_map.plot(ax=ax, facecolor="none", edgecolor='k',linewidth=1, zorder=14, alpha=1)
-    plt.xlabel('Longitude')
-    plt.ylabel('Latitude')
-    #plt.xlim(np.min([ulx,lrx]), np.max([ulx,lrx]))
-    #plt.ylim(np.min([uly,lry]), np.max([uly,lry]))
-    
-    cb = plt.colorbar(sc)
-    plt.show()
+##    fig, ax = plt.subplots(figsize=(15, 15))
+##    na_map = gpd.read_file('data/2014_ON_fixed_proj102001.shp')
+##    
+##    #crs = {'init': 'epsg:4326'}
+##    
+##    dfs = df[df['dam'] >= 0]
+##    sc= plt.scatter(dfs['lon'],dfs['lat'],c=dfs['spatial_auto'],cmap='plasma',s=1,alpha=0.25) #c=dam
+##    na_map.plot(ax=ax, facecolor="none", edgecolor='k',linewidth=1, zorder=14, alpha=1)
+##    plt.xlabel('Longitude')
+##    plt.ylabel('Latitude')
+##    #plt.xlim(np.min([ulx,lrx]), np.max([ulx,lrx]))
+##    #plt.ylim(np.min([uly,lry]), np.max([uly,lry]))
+##    
+##    cb = plt.colorbar(sc)
+##    plt.show()
     
     lengths = []
 
@@ -193,15 +212,27 @@ if __name__ == "__main__":
 
     mlen = min(lengths)
     print(lengths)
-    df = pd.concat(trainer)
+    df2 = pd.concat(trainer)
     
-    print(set(df['dam']))
-    df_trainX = df[['ndmi','year','bf','age']]
+    print(set(df2['dam']))
+    df_trainX = df2[['ndmi','bf','age']]
     print(len(df_trainX))
-    df_trainY = np.array(df[['dam']]).reshape(-1, 1)
+    df_trainY = np.array(df2[['dam']]).reshape(-1, 1)
 
-    reg = BalancedRandomForestClassifier(max_depth = 5, max_features = 'sqrt', min_samples_leaf = 1, min_samples_split = 20, random_state=1)
-    reg.fit(df_trainX, df_trainY)
+
+    rfc = BalancedRandomForestClassifier()
+    param_grid = { 
+    'max_depth': [5],
+    'max_features': ['sqrt'],
+    'min_samples_leaf': [1],
+    'min_samples_split': [2]
+    }   
+    CV_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv= 5)
+
+    #reg = BalancedRandomForestClassifier(max_depth = 5, max_features = 'sqrt', min_samples_leaf = 1, min_samples_split = 20, random_state=1)
+    #reg.fit(df_trainX, df_trainY)
+    bestF = CV_rfc.fit(df_trainX, df_trainY)
+    print(CV_rfc.best_params_)
     
 ##    from sklearn.inspection import PartialDependenceDisplay
 ##    
@@ -213,7 +244,7 @@ if __name__ == "__main__":
 ##    "grid_resolution": 20,
 ##    "centered": True,
 ##    "random_state": 1}
-##    my_plots = PartialDependenceDisplay.from_estimator(reg, df_trainX, ['ndmi'],target=2,ax=ax,kind="both",**common_params)
+##    my_plots = PartialDependenceDisplay.from_estimator(reg, df_trainX, ['ndmi','bf','age','spatial_auto'],target=2,ax=ax,kind="both",**common_params)
 ##    plt.show()
 ##
 ##    fig, ax = plt.subplots(figsize=(12, 6))
@@ -224,16 +255,16 @@ if __name__ == "__main__":
 ##    "grid_resolution": 20,
 ##    "centered": True,
 ##    "random_state": 1}
-##    my_plots = PartialDependenceDisplay.from_estimator(reg, df_trainX, ['ndmi'],target=3,ax=ax,kind="both",**common_params)
+##    my_plots = PartialDependenceDisplay.from_estimator(reg, df_trainX, ['ndmi','bf','age','spatial_auto'],target=3,ax=ax,kind="both",**common_params)
 ##    plt.show()
     
 
     df_save['tracker'] = list(range(0,len(df_save))) #index
     rem_track = df_save.dropna(how='any')
-    rem_track = rem_track[rem_track['small_buff'] == 1]
+    #rem_track = rem_track[rem_track['small_buff'] == 1]
     print(len(rem_track))
     #rem_track = rem_track.iloc[::10, :]
-    Zi = reg.predict(rem_track[['ndmi','year','bf','age']])
+    Zi = bestF.predict(rem_track[['ndmi','bf','age']])
 
     rem_track['pred'] = Zi
 
@@ -259,7 +290,19 @@ if __name__ == "__main__":
 
 
     mort = rem_track[rem_track['pred'] == 3]
+    from scipy.spatial import distance
+    
     points = [(x,y,) for x, y in zip(mort['lon'],mort['lat'])]
+    
+##    mdist = distance.cdist(np.array(points), np.array(points), 'euclidean')
+##    distm = np.amax(mdist, axis=1)
+##    tdf = pd.DataFrame()
+##    tdf['d'] = list(distm)
+##    tdf['points'] = points
+##    tdf = tdf[tdf['d'] >= 4000]
+##    points = tdf['points']
+
+    
     na_map3 = na_map[na_map['DAM'] == 3]
     
     ch = concave_hull(points,0.001,na_map3)
@@ -276,6 +319,7 @@ if __name__ == "__main__":
     
 
     mort = rem_track[rem_track['pred'] == 2]
+    
     points = [(x,y,) for x, y in zip(mort['lon'],mort['lat'])]
     na_map3 = na_map[na_map['DAM'] == 2]
     
