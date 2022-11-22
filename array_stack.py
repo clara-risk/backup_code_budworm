@@ -65,22 +65,23 @@ def concave_hull(points,a,compar):
     alpha = a #for concave hull 
 
     hull = alphashape.alphashape(points,alpha) #Swith 0 --> alpha
-    print(hull)
+    
     try: 
         if a != 0:  
             hull = MultiPolygon(hull) #[]
         else:
             hull = MultiPolygon([hull])
     except TypeError:
+        print('check!') 
         hull = MultiPolygon([hull])
     
-    hull_pts = [poly.exterior.coords.xy for poly in list(hull)]
+    #hull_pts = [poly.exterior.coords.xy for poly in list(hull)]
     if len(hull) != 0: 
-        fig, ax = plt.subplots()
+        #fig, ax = plt.subplots()
         #ax.scatter(hull_pts[0][0], hull_pts[0][1], color='red',s=1)
-        compar.plot(ax=ax,facecolor='blue',edgecolor='red')
-        ax.add_patch(PolygonPatch(hull, fill=False, color='k'))
-        plt.show()
+        #compar.plot(ax=ax,facecolor='None',edgecolor='red')
+        #ax.add_patch(PolygonPatch(hull, fill=False, color='k'))
+        #plt.show()
 
         
         polygon = gpd.GeoDataFrame(index=[0], crs='ESRI:102001', geometry=[hull])  
@@ -88,20 +89,21 @@ def concave_hull(points,a,compar):
 
         return polygon
     else:
-        print('no geometry') 
+        print('no geometry')
+        return []
 
 
 if __name__ == "__main__":
 
 
-    files = ['ndmi_raster','asm_raster','combo_raster','buff_30km','buff_8km']
-    names = ['ndmi','dam','combo','buff','small_buff'] 
+    files = ['ndmi_raster','asm_raster','combo_raster','buff_30km','buff_8km','bf_raster','age_raster']
+    names = ['ndmi','dam','combo','buff','small_buff','bf','age'] 
     pred = {}
     transformers = []
     cols_list = []
     rows_list = [] 
 
-    for f,n in zip(files,names):
+    for f,n in zip(files,names): 
         
         file_name_raster = f
         src_ds = gdal.Open('outputs/final/proj/'+file_name_raster+'.tif')
@@ -111,6 +113,7 @@ if __name__ == "__main__":
         rows = src_ds.RasterYSize
         rows_list.append(rows) 
         data = rb1.ReadAsArray(0, 0, cols, rows)
+        #data = a[::-1].T[::-1]
         print('Success in reading file.........................................') 
         pred[n] = data.flatten()
         print(len(data.flatten()))
@@ -119,22 +122,31 @@ if __name__ == "__main__":
     
     
     pred['year'] = np.ones(np.shape(pred['ndmi']))+2014
+    pred['age'] = pred['age'] + (2014-2011)
     
     col_num = cols_list[0]
     row_num = rows_list[0]
     ulx, xres, xskew, uly, yskew, yres  = transformers[0]
-
-    lrx = ulx + (row_num * abs(xres))
-    lry = uly + (col_num * abs(yres))
-
+    print(transformers[0])
+    lrx = ulx + (col_num * xres)
+    lry = uly + (row_num * yres)
+    print(lrx)
+    print(lry)
 
     Yi = np.linspace(np.min([uly,lry]), np.max([uly,lry]), row_num)
     Xi = np.linspace(np.min([ulx,lrx]), np.max([ulx,lrx]), col_num)
     
-    mgrid = np.rot90(np.fliplr(np.meshgrid(Xi, Yi))) #Transpose it? 
-    Xi, Yi = mgrid[:,0].flatten(), mgrid[:,1].flatten()
-    print(Xi[0])
-    print(Yi[0]) 
+    #mgrid = np.flipud(np.rot90(np.fliplr(np.meshgrid(Xi, Yi)))) #Transpose it? 
+    #Xi, Yi = mgrid[:,0].flatten(), mgrid[:,1].flatten()
+    Xi, Yi = np.meshgrid(Xi, Yi)
+    Xi, Yi = Xi.flatten(), Yi.flatten()
+
+    X_reshape = Xi.reshape(row_num,col_num)[::-1]
+    Xi = X_reshape.flatten()
+    Y_reshape = Yi.reshape(row_num,col_num)[::-1]
+    Yi = Y_reshape.flatten()
+    print(len(Xi))
+    print(Xi[0]) 
   
     pred['lon'] = Xi
     pred['lat'] = Yi
@@ -152,16 +164,15 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(figsize=(15, 15))
     na_map = gpd.read_file('data/2014_ON_fixed_proj102001.shp')
     
-    crs = {'init': 'epsg:4326'}
+    #crs = {'init': 'epsg:4326'}
     
-    dfs = df[df['dam'] == 2]
+    dfs = df[df['dam'] >= 2]
     sc= plt.scatter(dfs['lon'],dfs['lat'],c=dfs['dam'],cmap='plasma',s=1,alpha=0.25)
     na_map.plot(ax=ax, facecolor="none", edgecolor='k',linewidth=1, zorder=14, alpha=1)
-
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    plt.xlim(np.min([ulx,lrx]), np.max([ulx,lrx]))
-    plt.ylim(np.min([uly,lry]), np.max([uly,lry]))
+    #plt.xlim(np.min([ulx,lrx]), np.max([ulx,lrx]))
+    #plt.ylim(np.min([uly,lry]), np.max([uly,lry]))
     
     cb = plt.colorbar(sc)
     plt.show()
@@ -185,7 +196,7 @@ if __name__ == "__main__":
     df = pd.concat(trainer)
     
     print(set(df['dam']))
-    df_trainX = df[['ndmi','year']]
+    df_trainX = df[['ndmi','year','bf','age']]
     print(len(df_trainX))
     df_trainY = np.array(df[['dam']]).reshape(-1, 1)
 
@@ -202,7 +213,7 @@ if __name__ == "__main__":
 ##    "grid_resolution": 20,
 ##    "centered": True,
 ##    "random_state": 1}
-##    my_plots = PartialDependenceDisplay.from_estimator(reg, df_trainX, ['ndmi','year','lat','lon'],target=2,ax=ax,kind="both",**common_params)
+##    my_plots = PartialDependenceDisplay.from_estimator(reg, df_trainX, ['ndmi'],target=2,ax=ax,kind="both",**common_params)
 ##    plt.show()
 ##
 ##    fig, ax = plt.subplots(figsize=(12, 6))
@@ -213,7 +224,7 @@ if __name__ == "__main__":
 ##    "grid_resolution": 20,
 ##    "centered": True,
 ##    "random_state": 1}
-##    my_plots = PartialDependenceDisplay.from_estimator(reg, df_trainX, ['ndmi','year','lat','lon'],target=3,ax=ax,kind="both",**common_params)
+##    my_plots = PartialDependenceDisplay.from_estimator(reg, df_trainX, ['ndmi'],target=3,ax=ax,kind="both",**common_params)
 ##    plt.show()
     
 
@@ -221,8 +232,8 @@ if __name__ == "__main__":
     rem_track = df_save.dropna(how='any')
     rem_track = rem_track[rem_track['small_buff'] == 1]
     print(len(rem_track))
-    #rem_track = rem_track.iloc[::500, :]
-    Zi = reg.predict(rem_track[['ndmi','year']])
+    #rem_track = rem_track.iloc[::10, :]
+    Zi = reg.predict(rem_track[['ndmi','year','bf','age']])
 
     rem_track['pred'] = Zi
 
@@ -233,12 +244,8 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots(figsize=(15, 15))
     na_map = gpd.read_file('data/2014_ON_fixed_proj102001.shp')
-    
-    crs = {'init': 'epsg:4326'}
 
     #rem_track = rem_track[rem_track['pred'] > 0]
-    
-
     sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=1,alpha=0.25)
     na_map.plot(ax=ax, facecolor="none", edgecolor='k',linewidth=1, zorder=14, alpha=1)
 
@@ -255,9 +262,35 @@ if __name__ == "__main__":
     points = [(x,y,) for x, y in zip(mort['lon'],mort['lat'])]
     na_map3 = na_map[na_map['DAM'] == 3]
     
-    ch = concave_hull(points,0.0141,na_map3)
+    ch = concave_hull(points,0.001,na_map3)
+    ch2 = concave_hull(points,0.0141,na_map3)
+
+    fig, ax = plt.subplots(1,2)
+    if len(ch) > 0: 
+        ch.plot(ax=ax[0],facecolor='None',edgecolor='k')
+    if len(ch2) > 0: 
+        ch2.plot(ax=ax[1],facecolor='None',edgecolor='k')
+    na_map3.plot(ax=ax[0],facecolor='red',edgecolor='None',alpha=0.5)
+    na_map3.plot(ax=ax[1],facecolor='red',edgecolor='None',alpha=0.5)
+    plt.show()
     
 
+    mort = rem_track[rem_track['pred'] == 2]
+    points = [(x,y,) for x, y in zip(mort['lon'],mort['lat'])]
+    na_map3 = na_map[na_map['DAM'] == 2]
+    
+    ch = concave_hull(points,0.001,na_map3)
+    ch2 = concave_hull(points,0.0141,na_map3)
+
+    fig, ax = plt.subplots(1,2)
+    if len(ch) > 0: 
+        ch.plot(ax=ax[0],facecolor='None',edgecolor='k')
+    if len(ch2) > 0: 
+        ch2.plot(ax=ax[1],facecolor='None',edgecolor='k')
+    na_map3.plot(ax=ax[0],facecolor='red',edgecolor='None',alpha=0.5)
+    na_map3.plot(ax=ax[1],facecolor='red',edgecolor='None',alpha=0.5)
+    plt.show()
+    
     
     
     
