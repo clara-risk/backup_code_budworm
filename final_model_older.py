@@ -63,9 +63,22 @@ import alphashape
 
 def concave_hull(points,a,compar):
     #You aren't going to run it now, you're going to run it later, after classifying sat image
-    alpha = a #for concave hull 
+    alpha = a #for concave hull
 
-    hull = alphashape.alphashape(points,alpha) #Swith 0 --> alpha
+##    print(a)
+##    tv = list(np.linspace(0,0.0102)[::-1])
+##    tracker = [] 
+##    for av in tv:
+##        print(av)
+##        hull = alphashape.alphashape(points,av)
+##        if not hull.is_empty:
+##            print(hull)
+##            break
+        
+    print('yes')
+    hull = alphashape.alphashape(points,0.0036) #Swith 0 --> alpha
+
+    print('check!') 
     
     try: 
         if a != 0:  
@@ -77,7 +90,8 @@ def concave_hull(points,a,compar):
         hull = MultiPolygon([hull])
     
     #hull_pts = [poly.exterior.coords.xy for poly in list(hull)]
-    if len(hull) != 0: 
+    if len(hull) != 0:
+        print('check!')
         #fig, ax = plt.subplots()
         #ax.scatter(hull_pts[0][0], hull_pts[0][1], color='red',s=1)
         #compar.plot(ax=ax,facecolor='None',edgecolor='red')
@@ -88,8 +102,15 @@ def concave_hull(points,a,compar):
         
         
         polygon = gpd.GeoDataFrame(crs='ESRI:102001', geometry=list(hull_explode['geometry']))
+        print(polygon.head(10))
         polygon['AREA'] = (polygon['geometry'].area) *0.000001
-        polygon = polygon[polygon['AREA'] >= 3] 
+        print(polygon.head(10))
+        polygon1 = polygon[polygon['AREA'] >= 3]
+
+        if len(polygon1) == 0:
+            polygon = polygon[polygon['AREA'] >= 0]
+        else:
+            polygon = polygon1
         #polygon.to_file('data/concave_hull_dbscan/'+name+'.shp', driver='ESRI Shapefile')
 
         return polygon
@@ -100,15 +121,14 @@ def concave_hull(points,a,compar):
 def duplicated(yeari,mod):
 
     year = str(yeari)
-    yearp = str(2013)
+    yearp = str(1998)
 
 
-    files = ['100m_on_ndmi_102001_'+year,'asm_'+year,'combo','buff8_'+year,'age','elev','soil_text',\
+    files = ['100m_on_ndmi_102001_'+year,'asm_'+year,'buff8_'+year,\
              '100m_on_ndmi_102001_'+yearp,'100m_on_nbr1_102001_'+year,\
-             '100m_on_nbr1_102001_'+yearp,'100m_on_b4b5_102001_'+year,'100m_on_b4b5_102001_'+yearp,\
-             'buff100_'+year]
-    names = ['ndmi_'+year,'dam','combo','small_buff','age','elev', 'soil_text','ndmi_'+yearp,\
-             'nbr1_'+year,'nbr1_'+yearp,'b4b5_'+year,'b4b5_'+yearp,'b100'] 
+             '100m_on_nbr1_102001_'+yearp,'100m_on_b4b5_102001_'+year,'100m_on_b4b5_102001_'+yearp]
+    names = ['ndmi_'+year,'dam','small_buff','ndmi_'+yearp,\
+             'nbr1_'+year,'nbr1_'+yearp,'b4b5_'+year,'b4b5_'+yearp] 
     pred = {}
     transformers = []
     cols_list = []
@@ -130,11 +150,13 @@ def duplicated(yeari,mod):
         transform=src_ds.GetGeoTransform()
         transformers.append(transform)
     
-    pred['age'] = pred['age'] + (int(year)-2011)
+    #pred['age'] = pred['age'] + (int(year)-2011)
 
-    pred['diff'] = pred['ndmi_'+yearp] - pred['ndmi_'+year]
-    pred['nbr1_diff'] = pred['nbr1_'+yearp] - pred['nbr1_'+year]
-    pred['b4b5_diff'] = pred['b4b5_'+yearp] - pred['b4b5_'+year]
+    #Reverse of before
+
+    pred['diff'] = pred['ndmi_'+year] - pred['ndmi_'+yearp]
+    pred['nbr1_diff'] = pred['nbr1_'+year] - pred['nbr1_'+yearp]
+    pred['b4b5_diff'] = pred['b4b5_'+year] - pred['b4b5_'+yearp]
 
 
     col_num = cols_list[0]
@@ -220,7 +242,9 @@ def duplicated(yeari,mod):
 ##    
 ##    plt.show()
  
-    df['dam'] = np.where(df['dam'] >= 2,1,0)
+    df['dam'] = np.where(df['dam'] >= 1,1,0)
+    print(df['dam'].head(10))
+    df = df.iloc[::10, :]
     df_save = df
     
     lengths = []
@@ -349,6 +373,7 @@ def duplicated(yeari,mod):
 
 
     mort = rem_track[rem_track['pred'] == 1]
+    print(mort)
     #from scipy.spatial import distance
     
     points = [(x,y,) for x, y in zip(mort['lon'],mort['lat'])]
@@ -357,19 +382,21 @@ def duplicated(yeari,mod):
     #dPoint.to_file('rasters/concave_hull/2021_test_p.shp', driver='ESRI Shapefile')
     na_map3 = na_map[na_map['DAM'] ==2]
     
-#    ch = concave_hull(points,0.001405,na_map3)
+    #ch = concave_hull(points,0.001405,na_map3)
     ch2 = concave_hull(points,0.0141,na_map3)
+    print(ch2.head(10))
     
-##    fig, ax = plt.subplots(1,2)
-####    if len(ch) > 0: 
-####        ch.plot(ax=ax[0],facecolor='None',edgecolor='k')
-##    if len(ch2) > 0: 
-##        ch2.plot(ax=ax[1],facecolor='None',edgecolor='k')
-##    na_map3.plot(ax=ax[0],facecolor='red',edgecolor='None',alpha=0.5)
-##    na_map3.plot(ax=ax[1],facecolor='red',edgecolor='None',alpha=0.5)
-##    plt.show()
+    fig, ax = plt.subplots(1,2)
+##    if len(ch) > 0: 
+##        ch.plot(ax=ax[0],facecolor='None',edgecolor='k')
     if len(ch2) > 0: 
-        ch2.to_file('rasters/concave_hull/'+str(yeari)+'_test_y2013_feb1.shp', driver='ESRI Shapefile')
+        ch2.plot(ax=ax[1],facecolor='None',edgecolor='k')
+    na_map3.plot(ax=ax[0],facecolor='red',edgecolor='None',alpha=0.5)
+    na_map3.plot(ax=ax[1],facecolor='red',edgecolor='None',alpha=0.5)
+    plt.show()
+    if len(ch2) > 0:
+        print('check2')
+        ch2.to_file('rasters/concave_hull/'+str(yeari)+'_test_y2013_feb3.shp', driver='ESRI Shapefile')
         
 if __name__ == "__main__":
 
@@ -379,10 +406,9 @@ if __name__ == "__main__":
 
     files = ['100m_on_ndmi_102001_'+year,'asm_'+year,'combo','buff8_'+year,'age','elev','soil_text',\
              '100m_on_ndmi_102001_'+yearp,'100m_on_nbr1_102001_'+year,\
-             '100m_on_nbr1_102001_'+yearp,'100m_on_b4b5_102001_'+year,'100m_on_b4b5_102001_'+yearp,\
-             'buff100_'+year]
+             '100m_on_nbr1_102001_'+yearp,'100m_on_b4b5_102001_'+year,'100m_on_b4b5_102001_'+yearp,]
     names = ['ndmi_'+year,'dam','combo','small_buff','age','elev', 'soil_text','ndmi_'+yearp,\
-             'nbr1_'+year,'nbr1_'+yearp,'b4b5_'+year,'b4b5_'+yearp,'b100'] 
+             'nbr1_'+year,'nbr1_'+yearp,'b4b5_'+year,'b4b5_'+yearp] 
     pred = {}
     transformers = []
     cols_list = []
@@ -635,30 +661,31 @@ if __name__ == "__main__":
 ##    plt.show()
 
 
-    mort = rem_track[rem_track['pred'] == 1]
-    #from scipy.spatial import distance
-    
-    points = [(x,y,) for x, y in zip(mort['lon'],mort['lat'])]
-    #points2 = [Point([x,y]) for x, y in zip(mort['lon'],mort['lat'])]
-    #dPoint = gpd.GeoDataFrame(crs='ESRI:102001', geometry=points2)
-    #dPoint.to_file('rasters/concave_hull/2021_test_p.shp', driver='ESRI Shapefile')
-    na_map3 = na_map[na_map['DAM'] ==2]
-    
-    #ch = concave_hull(points,0.001405,na_map3)
-    ch2 = concave_hull(points,0.0141,na_map3)
-    
-    #fig, ax = plt.subplots(1,2)
-##    if len(ch) > 0: 
-##        ch.plot(ax=ax[0],facecolor='None',edgecolor='k')
-    #if len(ch2) > 0: 
-        #ch2.plot(ax=ax[1],facecolor='None',edgecolor='k')
-    #na_map3.plot(ax=ax[0],facecolor='red',edgecolor='None',alpha=0.5)
-    #na_map3.plot(ax=ax[1],facecolor='red',edgecolor='None',alpha=0.5)
-    #plt.show()
-    if len(ch2) > 0: 
-        ch2.to_file('rasters/concave_hull/2021_test_y2013_feb1.shp', driver='ESRI Shapefile')
+##    mort = rem_track[rem_track['pred'] == 1]
+##    #from scipy.spatial import distance
+##    
+##    points = [(x,y,) for x, y in zip(mort['lon'],mort['lat'])]
+##    #points2 = [Point([x,y]) for x, y in zip(mort['lon'],mort['lat'])]
+##    #dPoint = gpd.GeoDataFrame(crs='ESRI:102001', geometry=points2)
+##    #dPoint.to_file('rasters/concave_hull/2021_test_p.shp', driver='ESRI Shapefile')
+##    na_map3 = na_map[na_map['DAM'] ==2]
+##    
+##    #ch = concave_hull(points,0.001405,na_map3)
+##    ch2 = concave_hull(points,0.0141,na_map3)
+##    
+##    #fig, ax = plt.subplots(1,2)
+####    if len(ch) > 0: 
+####        ch.plot(ax=ax[0],facecolor='None',edgecolor='k')
+##    #if len(ch2) > 0: 
+##        #ch2.plot(ax=ax[1],facecolor='None',edgecolor='k')
+##    #na_map3.plot(ax=ax[0],facecolor='red',edgecolor='None',alpha=0.5)
+##    #na_map3.plot(ax=ax[1],facecolor='red',edgecolor='None',alpha=0.5)
+##    #plt.show()
+##    if len(ch2) > 0: 
+##        ch2.to_file('rasters/concave_hull/2021_test_y2013_feb1.shp', driver='ESRI Shapefile')
 
-    for y in list(range(2014,2021)): 
+    yfor = list(range(1984,1998))
+    for y in yfor: 
 
         duplicated(y,bestF)
 

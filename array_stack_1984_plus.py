@@ -83,11 +83,9 @@ def concave_hull(points,a,compar):
         #compar.plot(ax=ax,facecolor='None',edgecolor='red')
         #ax.add_patch(PolygonPatch(hull, fill=False, color='k'))
         #plt.show()
-        p1 = gpd.GeoDataFrame(index=[0], crs='ESRI:102001', geometry=[hull])
-        hull_explode = p1.explode(ignore_index=True)
+
         
-        
-        polygon = gpd.GeoDataFrame(crs='ESRI:102001', geometry=list(hull_explode['geometry']))
+        polygon = gpd.GeoDataFrame(index=[0], crs='ESRI:102001', geometry=[hull])
         polygon['AREA'] = (polygon['geometry'].area) *0.000001
         polygon = polygon[polygon['AREA'] >= 3] 
         #polygon.to_file('data/concave_hull_dbscan/'+name+'.shp', driver='ESRI Shapefile')
@@ -97,10 +95,10 @@ def concave_hull(points,a,compar):
         print('no geometry')
         return []
 
-def duplicated(yeari,mod):
+def duplicated(yeari,mod,healthy_year):
 
     year = str(yeari)
-    yearp = str(2013)
+    yearp = str(healthy_year)
 
 
     files = ['100m_on_ndmi_102001_'+year,'asm_'+year,'combo','buff8_'+year,'age','elev','soil_text',\
@@ -166,7 +164,7 @@ def duplicated(yeari,mod):
     
     df = pd.DataFrame(pred).dropna(how='any') #.iloc[::100, :]
     
-    #df = df[df['combo'] > 0] #exclude no species
+    df = df[df['combo'] > 0] #exclude no species
 
     df_calc = df 
 
@@ -180,30 +178,30 @@ def duplicated(yeari,mod):
     df = df[df['ndmi_'+yearp] <= 1]
     print(len(df))
 
-    p95 = np.percentile(df_calc['b4b5_'+yearp], 99)
+    p95 = np.percentile(df_calc['b4b5_'+yearp], 95)
     print(p95)
-    p5 = np.percentile(df_calc['b4b5_'+yearp], 1)
+    p5 = np.percentile(df_calc['b4b5_'+yearp], 5)
     print(p5)
     df = df[df['b4b5_'+yearp] >= p5]
     df = df[df['b4b5_'+yearp] <= p95]
 
-    p95 = np.percentile(df_calc['b4b5_'+year], 99)
+    p95 = np.percentile(df_calc['b4b5_'+year], 95)
     print(p95)
-    p5 = np.percentile(df_calc['b4b5_'+year], 1)
+    p5 = np.percentile(df_calc['b4b5_'+year], 5)
     print(p5)
     df = df[df['b4b5_'+year] >= p5]
     df = df[df['b4b5_'+year] <= p95]
 
-    p95 = np.percentile(df_calc['nbr1_'+yearp], 99)
+    p95 = np.percentile(df_calc['nbr1_'+yearp], 95)
     print(p95)
-    p5 = np.percentile(df_calc['nbr1_'+yearp], 1)
+    p5 = np.percentile(df_calc['nbr1_'+yearp], 5)
     print(p5)
     df = df[df['nbr1_'+yearp] >= p5]
     df = df[df['nbr1_'+yearp] <= p95]
 
-    p95 = np.percentile(df_calc['nbr1_'+year], 99)
+    p95 = np.percentile(df_calc['nbr1_'+year], 95)
     print(p95)
-    p5 = np.percentile(df_calc['nbr1_'+year], 1)
+    p5 = np.percentile(df_calc['nbr1_'+year], 5)
     print(p5)
     df = df[df['nbr1_'+year] >= p5]
     df = df[df['nbr1_'+year] <= p95]
@@ -235,7 +233,6 @@ def duplicated(yeari,mod):
                 trainer.append(df_f.sample(n=num,random_state=1)) #500000
                 lengths.append(num)
             else:
-                print('Check - less than 2000')
                 trainer.append(df_f)
         else:
             #number of negatives varies with cloud mask, etc.
@@ -248,18 +245,18 @@ def duplicated(yeari,mod):
     print(lengths)
     df2 = pd.concat(trainer)
     df2 = df2.reset_index(drop=True).dropna(how='any')
-##
-##    fig, axs = plt.subplots(2,3, figsize=(7, 7))
-##
-##    sns.histplot(data=df2, x="ndmi_"+year, kde=True, color="skyblue", ax=axs[0, 0])
-##    sns.histplot(data=df2, x="nbr1_"+year, kde=True, color="olive", ax=axs[0, 1])
-##    sns.histplot(data=df2, x="b4b5_"+year, kde=True, color="gold", ax=axs[0,2])
-##    sns.histplot(data=df2, x="diff", kde=True, color="teal", ax=axs[1, 0])
-##    sns.histplot(data=df2, x="nbr1_diff", kde=True, color="teal", ax=axs[1, 1])
-##    h= sns.histplot(data=df2, x="b4b5_diff", kde=True, color="teal", ax=axs[1, 2])
-##    h.set(ylabel=None)
-##    
-##    plt.show()
+
+    fig, axs = plt.subplots(2,3, figsize=(7, 7))
+
+    sns.histplot(data=df2, x="ndmi_"+year, kde=True, color="skyblue", ax=axs[0, 0])
+    sns.histplot(data=df2, x="nbr1_"+year, kde=True, color="olive", ax=axs[0, 1])
+    sns.histplot(data=df2, x="b4b5_"+year, kde=True, color="gold", ax=axs[0,2])
+    sns.histplot(data=df2, x="diff", kde=True, color="teal", ax=axs[1, 0])
+    sns.histplot(data=df2, x="nbr1_diff", kde=True, color="teal", ax=axs[1, 1])
+    h= sns.histplot(data=df2, x="b4b5_diff", kde=True, color="teal", ax=axs[1, 2])
+    h.set(ylabel=None)
+    
+    plt.show()
 
     print(set(df2['dam']))
     df_trainX = df2[['ndmi_'+year,'nbr1_'+year,'b4b5_'+year,\
@@ -312,9 +309,9 @@ def duplicated(yeari,mod):
         
     print(confusion_matrix(rep, Zn))
 
-    #from sklearn.metrics import ConfusionMatrixDisplay
-    #ConfusionMatrixDisplay.from_predictions(rep, Zn)
-    #plt.show()
+    from sklearn.metrics import ConfusionMatrixDisplay
+    ConfusionMatrixDisplay.from_predictions(rep, Zn)
+    plt.show()
 
     from sklearn.metrics import matthews_corrcoef
     print(matthews_corrcoef(rep, Zn))
@@ -333,8 +330,8 @@ def duplicated(yeari,mod):
     total = rem_track
 
 ##    fig, ax = plt.subplots(figsize=(15, 15))
-    na_map = gpd.read_file('rasters/temp/2015_proj_clip_dam.shp')
-    na_map = na_map[na_map['DAM'] == 2]
+##    na_map = gpd.read_file('rasters/temp/2015_proj_clip_dam.shp')
+##    na_map = na_map[na_map['DAM'] == 2]
 ##    rem_track = rem_track[rem_track['pred'] == 1]
 ##    sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=0.25,alpha=0.25)
 ##    na_map.plot(ax=ax, facecolor="none", edgecolor='k',linewidth=1, zorder=14, alpha=1)
@@ -346,30 +343,30 @@ def duplicated(yeari,mod):
 ##    
 ##    cb = plt.colorbar(sc)
 ##    plt.show()
-
-
-    mort = rem_track[rem_track['pred'] == 1]
-    #from scipy.spatial import distance
-    
-    points = [(x,y,) for x, y in zip(mort['lon'],mort['lat'])]
-    #points2 = [Point([x,y]) for x, y in zip(mort['lon'],mort['lat'])]
-    #dPoint = gpd.GeoDataFrame(crs='ESRI:102001', geometry=points2)
-    #dPoint.to_file('rasters/concave_hull/2021_test_p.shp', driver='ESRI Shapefile')
-    na_map3 = na_map[na_map['DAM'] ==2]
-    
-#    ch = concave_hull(points,0.001405,na_map3)
-    ch2 = concave_hull(points,0.0141,na_map3)
-    
-##    fig, ax = plt.subplots(1,2)
-####    if len(ch) > 0: 
-####        ch.plot(ax=ax[0],facecolor='None',edgecolor='k')
+##
+##
+##    mort = rem_track[rem_track['pred'] == 1]
+##    #from scipy.spatial import distance
+##    
+##    points = [(x,y,) for x, y in zip(mort['lon'],mort['lat'])]
+##    #points2 = [Point([x,y]) for x, y in zip(mort['lon'],mort['lat'])]
+##    #dPoint = gpd.GeoDataFrame(crs='ESRI:102001', geometry=points2)
+##    #dPoint.to_file('rasters/concave_hull/2021_test_p.shp', driver='ESRI Shapefile')
+##    na_map3 = na_map[na_map['DAM'] ==2]
+##    
+###    ch = concave_hull(points,0.001405,na_map3)
+##    ch2 = concave_hull(points,0.0141,na_map3)
+##    
+####    fig, ax = plt.subplots(1,2)
+######    if len(ch) > 0: 
+######        ch.plot(ax=ax[0],facecolor='None',edgecolor='k')
+####    if len(ch2) > 0: 
+####        ch2.plot(ax=ax[1],facecolor='None',edgecolor='k')
+####    na_map3.plot(ax=ax[0],facecolor='red',edgecolor='None',alpha=0.5)
+####    na_map3.plot(ax=ax[1],facecolor='red',edgecolor='None',alpha=0.5)
+####    plt.show()
 ##    if len(ch2) > 0: 
-##        ch2.plot(ax=ax[1],facecolor='None',edgecolor='k')
-##    na_map3.plot(ax=ax[0],facecolor='red',edgecolor='None',alpha=0.5)
-##    na_map3.plot(ax=ax[1],facecolor='red',edgecolor='None',alpha=0.5)
-##    plt.show()
-    if len(ch2) > 0: 
-        ch2.to_file('rasters/concave_hull/'+str(yeari)+'_test_y2013_feb1.shp', driver='ESRI Shapefile')
+##        ch2.to_file('rasters/concave_hull/'+str(yeari)+'_test_y2013.shp', driver='ESRI Shapefile')
         
 if __name__ == "__main__":
 
@@ -440,7 +437,7 @@ if __name__ == "__main__":
     
     df = pd.DataFrame(pred).dropna(how='any') #.iloc[::100, :]
     
-    #df = df[df['combo'] > 0] #exclude no species
+    df = df[df['combo'] > 0] #exclude no species
 
     df_calc = df 
 
@@ -454,30 +451,30 @@ if __name__ == "__main__":
     df = df[df['ndmi_'+yearp] <= 1]
     print(len(df))
 
-    p95 = np.percentile(df_calc['b4b5_'+yearp], 99)
+    p95 = np.percentile(df_calc['b4b5_'+yearp], 95)
     print(p95)
-    p5 = np.percentile(df_calc['b4b5_'+yearp], 1)
+    p5 = np.percentile(df_calc['b4b5_'+yearp], 5)
     print(p5)
     df = df[df['b4b5_'+yearp] >= p5]
     df = df[df['b4b5_'+yearp] <= p95]
 
-    p95 = np.percentile(df_calc['b4b5_'+year], 99)
+    p95 = np.percentile(df_calc['b4b5_'+year], 95)
     print(p95)
-    p5 = np.percentile(df_calc['b4b5_'+year], 1)
+    p5 = np.percentile(df_calc['b4b5_'+year], 5)
     print(p5)
     df = df[df['b4b5_'+year] >= p5]
     df = df[df['b4b5_'+year] <= p95]
 
-    p95 = np.percentile(df_calc['nbr1_'+yearp], 99)
+    p95 = np.percentile(df_calc['nbr1_'+yearp], 95)
     print(p95)
-    p5 = np.percentile(df_calc['nbr1_'+yearp], 1)
+    p5 = np.percentile(df_calc['nbr1_'+yearp], 5)
     print(p5)
     df = df[df['nbr1_'+yearp] >= p5]
     df = df[df['nbr1_'+yearp] <= p95]
 
-    p95 = np.percentile(df_calc['nbr1_'+year], 99)
+    p95 = np.percentile(df_calc['nbr1_'+year], 95)
     print(p95)
-    p5 = np.percentile(df_calc['nbr1_'+year], 1)
+    p5 = np.percentile(df_calc['nbr1_'+year], 5)
     print(p5)
     df = df[df['nbr1_'+year] >= p5]
     df = df[df['nbr1_'+year] <= p95]
@@ -519,18 +516,18 @@ if __name__ == "__main__":
     print(lengths)
     df2 = pd.concat(trainer)
     df2 = df2.reset_index(drop=True).dropna(how='any')
-##
-##    fig, axs = plt.subplots(2,3, figsize=(7, 7))
-##
-##    sns.histplot(data=df2, x="ndmi_"+year, kde=True, color="skyblue", ax=axs[0, 0])
-##    sns.histplot(data=df2, x="nbr1_"+year, kde=True, color="olive", ax=axs[0, 1])
-##    sns.histplot(data=df2, x="b4b5_"+year, kde=True, color="gold", ax=axs[0,2])
-##    sns.histplot(data=df2, x="diff", kde=True, color="teal", ax=axs[1, 0])
-##    sns.histplot(data=df2, x="nbr1_diff", kde=True, color="teal", ax=axs[1, 1])
-##    h= sns.histplot(data=df2, x="b4b5_diff", kde=True, color="teal", ax=axs[1, 2])
-##    h.set(ylabel=None)
-##    
-##    plt.show()
+
+    fig, axs = plt.subplots(2,3, figsize=(7, 7))
+
+    sns.histplot(data=df2, x="ndmi_"+year, kde=True, color="skyblue", ax=axs[0, 0])
+    sns.histplot(data=df2, x="nbr1_"+year, kde=True, color="olive", ax=axs[0, 1])
+    sns.histplot(data=df2, x="b4b5_"+year, kde=True, color="gold", ax=axs[0,2])
+    sns.histplot(data=df2, x="diff", kde=True, color="teal", ax=axs[1, 0])
+    sns.histplot(data=df2, x="nbr1_diff", kde=True, color="teal", ax=axs[1, 1])
+    h= sns.histplot(data=df2, x="b4b5_diff", kde=True, color="teal", ax=axs[1, 2])
+    h.set(ylabel=None)
+    
+    plt.show()
 
     print(set(df2['dam']))
     df_trainX = df2[['ndmi_'+year,'nbr1_'+year,'b4b5_'+year,\
@@ -548,39 +545,31 @@ if __name__ == "__main__":
     count = 0 
 
     rfc = RandomForestClassifier(random_state=1)
-##    param_grid = { 
-##    'max_depth': [5, 10, 30],
-##    'max_features': ['sqrt'],
-##    'min_samples_leaf': [1,3,5],
-##    'min_samples_split': [2,20,40,60]
-##    }
-
     param_grid = { 
-    'max_depth': [30],
+    'max_depth': [5, 10, 30],
     'max_features': ['sqrt'],
-    'min_samples_leaf': [5],
-    'min_samples_split': [20]
-    }
-    
-    CV_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv= 5) #5
+    'min_samples_leaf': [1,3,5],
+    'min_samples_split': [2,20,40,60]
+    }   
+    CV_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv= 5)
     bestF = CV_rfc.fit(X, Y)
     print(CV_rfc.best_params_)
 
-##    sss = StratifiedShuffleSplit(n_splits=5, test_size=0.3, random_state=1)
-##    
-##    mattc = []
-##    from sklearn.metrics import matthews_corrcoef
-##    for train_index, test_index in sss.split(X, Y):
-##
-##        X_train, X_test = X[train_index], X[test_index]
-##        y_train, y_test = Y[train_index], Y[test_index]
-##        print(len(X_train))
-##
-##        bestF = CV_rfc.fit(X, Y)
-##        
-##        Ztest = bestF.predict(X_test)
-##        print(matthews_corrcoef(y_test, Ztest))
-##        mattc.append(matthews_corrcoef(y_test, Ztest))
+    sss = StratifiedShuffleSplit(n_splits=5, test_size=0.3, random_state=1)
+    
+    mattc = []
+    from sklearn.metrics import matthews_corrcoef
+    for train_index, test_index in sss.split(X, Y):
+
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = Y[train_index], Y[test_index]
+        print(len(X_train))
+
+        bestF = CV_rfc.fit(X, Y)
+        
+        Ztest = bestF.predict(X_test)
+        print(matthews_corrcoef(y_test, Ztest))
+        mattc.append(matthews_corrcoef(y_test, Ztest))
         
 
     df_save['tracker'] = list(range(0,len(df_save))) #index
@@ -599,9 +588,9 @@ if __name__ == "__main__":
         
     print(confusion_matrix(rep, Zn))
 
-    #from sklearn.metrics import ConfusionMatrixDisplay
-    #ConfusionMatrixDisplay.from_predictions(rep, Zn)
-    #plt.show()
+    from sklearn.metrics import ConfusionMatrixDisplay
+    ConfusionMatrixDisplay.from_predictions(rep, Zn)
+    plt.show()
 
     from sklearn.metrics import matthews_corrcoef
     print(matthews_corrcoef(rep, Zn))
@@ -620,8 +609,8 @@ if __name__ == "__main__":
     total = rem_track
 
 ##    fig, ax = plt.subplots(figsize=(15, 15))
-    na_map = gpd.read_file('rasters/temp/2015_proj_clip_dam.shp')
-    na_map = na_map[na_map['DAM'] == 2]
+##    na_map = gpd.read_file('rasters/temp/2015_proj_clip_dam.shp')
+##    na_map = na_map[na_map['DAM'] == 2]
 ##    rem_track = rem_track[rem_track['pred'] == 1]
 ##    sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=0.25,alpha=0.25)
 ##    na_map.plot(ax=ax, facecolor="none", edgecolor='k',linewidth=1, zorder=14, alpha=1)
@@ -633,30 +622,30 @@ if __name__ == "__main__":
 ##    
 ##    cb = plt.colorbar(sc)
 ##    plt.show()
-
-
-    mort = rem_track[rem_track['pred'] == 1]
-    #from scipy.spatial import distance
-    
-    points = [(x,y,) for x, y in zip(mort['lon'],mort['lat'])]
-    #points2 = [Point([x,y]) for x, y in zip(mort['lon'],mort['lat'])]
-    #dPoint = gpd.GeoDataFrame(crs='ESRI:102001', geometry=points2)
-    #dPoint.to_file('rasters/concave_hull/2021_test_p.shp', driver='ESRI Shapefile')
-    na_map3 = na_map[na_map['DAM'] ==2]
-    
-    #ch = concave_hull(points,0.001405,na_map3)
-    ch2 = concave_hull(points,0.0141,na_map3)
-    
-    #fig, ax = plt.subplots(1,2)
-##    if len(ch) > 0: 
-##        ch.plot(ax=ax[0],facecolor='None',edgecolor='k')
-    #if len(ch2) > 0: 
-        #ch2.plot(ax=ax[1],facecolor='None',edgecolor='k')
-    #na_map3.plot(ax=ax[0],facecolor='red',edgecolor='None',alpha=0.5)
-    #na_map3.plot(ax=ax[1],facecolor='red',edgecolor='None',alpha=0.5)
-    #plt.show()
-    if len(ch2) > 0: 
-        ch2.to_file('rasters/concave_hull/2021_test_y2013_feb1.shp', driver='ESRI Shapefile')
+##
+##
+##    mort = rem_track[rem_track['pred'] == 1]
+##    #from scipy.spatial import distance
+##    
+##    points = [(x,y,) for x, y in zip(mort['lon'],mort['lat'])]
+##    #points2 = [Point([x,y]) for x, y in zip(mort['lon'],mort['lat'])]
+##    #dPoint = gpd.GeoDataFrame(crs='ESRI:102001', geometry=points2)
+##    #dPoint.to_file('rasters/concave_hull/2021_test_p.shp', driver='ESRI Shapefile')
+##    na_map3 = na_map[na_map['DAM'] ==2]
+##    
+##    #ch = concave_hull(points,0.001405,na_map3)
+##    ch2 = concave_hull(points,0.0141,na_map3)
+##    
+##    #fig, ax = plt.subplots(1,2)
+####    if len(ch) > 0: 
+####        ch.plot(ax=ax[0],facecolor='None',edgecolor='k')
+##    #if len(ch2) > 0: 
+##        #ch2.plot(ax=ax[1],facecolor='None',edgecolor='k')
+##    #na_map3.plot(ax=ax[0],facecolor='red',edgecolor='None',alpha=0.5)
+##    #na_map3.plot(ax=ax[1],facecolor='red',edgecolor='None',alpha=0.5)
+##    #plt.show()
+##    if len(ch2) > 0: 
+##        ch2.to_file('rasters/concave_hull/2021_test_y2013_3.shp', driver='ESRI Shapefile')
 
     for y in list(range(2014,2021)): 
 
