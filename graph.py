@@ -370,111 +370,29 @@ def duplicated(yeari,mod):
         
 if __name__ == "__main__":
 
-    import contextily as cx
-##    fig, ax = plt.subplots(figsize=(15, 15))
-##    na_map = gpd.read_file('asm/2021_proj_clip.shp').to_crs('EPSG:4326') 
-##    na_map1 = na_map[na_map['DAM'] == 2]
-##    na_map2 = na_map[na_map['DAM'] == 3]
-##    #rem_track = rem_track[rem_track['pred'] == 1]
-##    #sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=0.25,alpha=0.25)
-##    na_map1.plot(ax=ax, facecolor="#F39C12", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    na_map2.plot(ax=ax, facecolor="#D35400", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    #cx.add_basemap(ax, crs=na_map.crs) #,source=cx.providers.Stamen.TonerLite
-##    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.Toner)
-##    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.TonerLabels,zoom=8,zorder=2)
-##    
-##    #plt.xlabel('Longitude')
-##    #plt.ylabel('Latitude')
-##    #plt.xlim(np.min([ulx,lrx]), np.max([ulx,lrx]))
-##    #plt.ylim(np.min([uly,lry]), np.max([uly,lry]))
+##    year = list(range(2014,2021+1))
 ##
-##    ax.set_yticklabels([])
-##    ax.set_xticklabels([])
-##    ax.axes.get_xaxis().set_visible(False)
-##    ax.set_xticks([])
-##    ax.set_yticks([])
-##    
-##    #cb = plt.colorbar(sc)
+##    av_val = [0.72448621,0.68485988,0.695434915,0.710060395,0.712384897,\
+##              0.707336253,0.729394809,0.727520442]
+##    stdev = [0.01082138,0.009443515,0.017112309,0.010817382,0.015479329,\
+##             0.014477619,0.006435234,0.023980813]
+##
+##    plt.errorbar(year, av_val, stdev, c='#F39C12')
+##    plt.scatter(year, av_val, c='#F39C12')
+##    plt.xlabel('Year')
+##    plt.ylabel('MCC') 
 ##    plt.show()
 
+    year = list(range(1984,1997+1))
+    av_val = [0.732936776,0.765309417,0.705363224,0.744733646,0.731646063,\
+              0.712478724,0.749193283,0.766427126,0.783041927,0.770041826,0.766433107,\
+              0.708174028,0.702562807,0.694066797]    
+    stdev = [0.007975898,0.013159365,0.010641531,0.018480825,0.022009462,0.012613697,\
+             0.007191277,0.010371466,0.015960134,0.017634013,0.021983509,0.012695617,\
+             0.024622022,0.013109625]
 
-##    fig, ax = plt.subplots(figsize=(15, 15))
-##    na_map = gpd.read_file('zoom_north_bay.shp').to_crs(epsg=3857)
-##    na_map1 = na_map[na_map['DAM'] == 2]
-##    na_map2 = na_map[na_map['DAM'] == 3]
-##    #rem_track = rem_track[rem_track['pred'] == 1]
-##    #sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=0.25,alpha=0.25)
-##    na_map1.plot(ax=ax, facecolor="#F39C12", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    na_map2.plot(ax=ax, facecolor="#D35400", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    #cx.add_basemap(ax, crs=na_map.crs) #,source=cx.providers.Stamen.TonerLite
-##    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.Toner)
-##    #cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.TonerLabels,zorder=2)
-##    
-##    #plt.xlabel('Longitude')
-##    #plt.ylabel('Latitude')
-##
-##
-##    ax.set_yticklabels([])
-##    ax.set_xticklabels([])
-##    ax.axes.get_xaxis().set_visible(False)
-##    ax.set_xticks([])
-##    ax.set_yticks([])
-##    
-##    #cb = plt.colorbar(sc)
-##    plt.show()
-
-##    fig, ax = plt.subplots(figsize=(15, 15))
-##    na_map = gpd.read_file('asm_older/1990_ON_fixed.shp').to_crs(epsg=3857)
-##    #na_map1 = na_map[na_map['DAM'] == 2]
-##    #na_map2 = na_map[na_map['DAM'] == 3]
-##    #rem_track = rem_track[rem_track['pred'] == 1]
-##    #sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=0.25,alpha=0.25)
-##    na_map.plot(ax=ax, facecolor="#F39C12", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    #na_map2.plot(ax=ax, facecolor="#D35400", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    #cx.add_basemap(ax, crs=na_map.crs) #,source=cx.providers.Stamen.TonerLite
-##    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.Toner)
-##    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.TonerLabels,zorder=2)
-##    
-##    #plt.xlabel('Longitude')
-##    #plt.ylabel('Latitude')
-##
-##
-##    ax.set_yticklabels([])
-##    ax.set_xticklabels([])
-##    ax.axes.get_xaxis().set_visible(False)
-##    ax.set_xticks([])
-##    ax.set_yticks([])
-##    
-##    #cb = plt.colorbar(sc)
-##    plt.show()
-
-    fig, ax = plt.subplots(figsize=(15, 15))
-    na_map = gpd.read_file('ex_thunderbay_1990.shp').to_crs(epsg=3857)
-    #na_map1 = na_map[na_map['DAM'] == 2]
-    #na_map2 = na_map[na_map['DAM'] == 3]
-    #rem_track = rem_track[rem_track['pred'] == 1]
-    #sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=0.25,alpha=0.25)
-    na_map.plot(ax=ax, facecolor="#F39C12", edgecolor='#F39C12',linewidth=1, zorder=1, alpha=0.3)
-    #na_map.plot(ax=ax, facecolor="#F39C12", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-    #na_map2.plot(ax=ax, facecolor="#D35400", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-    #cx.add_basemap(ax, crs=na_map.crs) #,source=cx.providers.Stamen.TonerLite
-    #Figure 4
-    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.Toner)
-    #Figure5
-    cx.add_basemap(ax, crs=na_map.crs)
-    #cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.TonerLabels,zorder=2)
-    
-    #plt.xlabel('Longitude')
-    #plt.ylabel('Latitude')
-
-
-    ax.set_yticklabels([])
-    ax.set_xticklabels([])
-    ax.axes.get_xaxis().set_visible(False)
-    ax.set_xticks([])
-    ax.set_yticks([])
-
-    
-    #cb = plt.colorbar(sc)
+    plt.errorbar(year, av_val, stdev, c='#F39C12')
+    plt.scatter(year, av_val, c='#F39C12')
+    plt.xlabel('Year')
+    plt.ylabel('MCC') 
     plt.show()
-    

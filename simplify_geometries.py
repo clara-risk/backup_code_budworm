@@ -370,111 +370,14 @@ def duplicated(yeari,mod):
         
 if __name__ == "__main__":
 
-    import contextily as cx
-##    fig, ax = plt.subplots(figsize=(15, 15))
-##    na_map = gpd.read_file('asm/2021_proj_clip.shp').to_crs('EPSG:4326') 
-##    na_map1 = na_map[na_map['DAM'] == 2]
-##    na_map2 = na_map[na_map['DAM'] == 3]
-##    #rem_track = rem_track[rem_track['pred'] == 1]
-##    #sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=0.25,alpha=0.25)
-##    na_map1.plot(ax=ax, facecolor="#F39C12", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    na_map2.plot(ax=ax, facecolor="#D35400", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    #cx.add_basemap(ax, crs=na_map.crs) #,source=cx.providers.Stamen.TonerLite
-##    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.Toner)
-##    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.TonerLabels,zoom=8,zorder=2)
-##    
-##    #plt.xlabel('Longitude')
-##    #plt.ylabel('Latitude')
-##    #plt.xlim(np.min([ulx,lrx]), np.max([ulx,lrx]))
-##    #plt.ylim(np.min([uly,lry]), np.max([uly,lry]))
-##
-##    ax.set_yticklabels([])
-##    ax.set_xticklabels([])
-##    ax.axes.get_xaxis().set_visible(False)
-##    ax.set_xticks([])
-##    ax.set_yticks([])
-##    
-##    #cb = plt.colorbar(sc)
-##    plt.show()
+##    f = gpd.read_file('merger_1984_1998_clara.shp')
+##    print(f.head(5))
+##    fs = f['geometry'].simplify(0.005)
+##    fs_n = gpd.GeoDataFrame(f['YEAR'],geometry=fs)
+##    fs_n.to_file('simplify_merger_data.shp', driver='ESRI Shapefile')
 
-
-##    fig, ax = plt.subplots(figsize=(15, 15))
-##    na_map = gpd.read_file('zoom_north_bay.shp').to_crs(epsg=3857)
-##    na_map1 = na_map[na_map['DAM'] == 2]
-##    na_map2 = na_map[na_map['DAM'] == 3]
-##    #rem_track = rem_track[rem_track['pred'] == 1]
-##    #sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=0.25,alpha=0.25)
-##    na_map1.plot(ax=ax, facecolor="#F39C12", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    na_map2.plot(ax=ax, facecolor="#D35400", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    #cx.add_basemap(ax, crs=na_map.crs) #,source=cx.providers.Stamen.TonerLite
-##    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.Toner)
-##    #cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.TonerLabels,zorder=2)
-##    
-##    #plt.xlabel('Longitude')
-##    #plt.ylabel('Latitude')
-##
-##
-##    ax.set_yticklabels([])
-##    ax.set_xticklabels([])
-##    ax.axes.get_xaxis().set_visible(False)
-##    ax.set_xticks([])
-##    ax.set_yticks([])
-##    
-##    #cb = plt.colorbar(sc)
-##    plt.show()
-
-##    fig, ax = plt.subplots(figsize=(15, 15))
-##    na_map = gpd.read_file('asm_older/1990_ON_fixed.shp').to_crs(epsg=3857)
-##    #na_map1 = na_map[na_map['DAM'] == 2]
-##    #na_map2 = na_map[na_map['DAM'] == 3]
-##    #rem_track = rem_track[rem_track['pred'] == 1]
-##    #sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=0.25,alpha=0.25)
-##    na_map.plot(ax=ax, facecolor="#F39C12", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    #na_map2.plot(ax=ax, facecolor="#D35400", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-##    #cx.add_basemap(ax, crs=na_map.crs) #,source=cx.providers.Stamen.TonerLite
-##    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.Toner)
-##    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.TonerLabels,zorder=2)
-##    
-##    #plt.xlabel('Longitude')
-##    #plt.ylabel('Latitude')
-##
-##
-##    ax.set_yticklabels([])
-##    ax.set_xticklabels([])
-##    ax.axes.get_xaxis().set_visible(False)
-##    ax.set_xticks([])
-##    ax.set_yticks([])
-##    
-##    #cb = plt.colorbar(sc)
-##    plt.show()
-
-    fig, ax = plt.subplots(figsize=(15, 15))
-    na_map = gpd.read_file('ex_thunderbay_1990.shp').to_crs(epsg=3857)
-    #na_map1 = na_map[na_map['DAM'] == 2]
-    #na_map2 = na_map[na_map['DAM'] == 3]
-    #rem_track = rem_track[rem_track['pred'] == 1]
-    #sc= plt.scatter(rem_track['lon'],rem_track['lat'],c=rem_track['pred'],cmap='Spectral_r',s=0.25,alpha=0.25)
-    na_map.plot(ax=ax, facecolor="#F39C12", edgecolor='#F39C12',linewidth=1, zorder=1, alpha=0.3)
-    #na_map.plot(ax=ax, facecolor="#F39C12", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-    #na_map2.plot(ax=ax, facecolor="#D35400", edgecolor='None',linewidth=1, zorder=1, alpha=0.8)
-    #cx.add_basemap(ax, crs=na_map.crs) #,source=cx.providers.Stamen.TonerLite
-    #Figure 4
-    cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.Toner)
-    #Figure5
-    cx.add_basemap(ax, crs=na_map.crs)
-    #cx.add_basemap(ax, crs=na_map.crs,source=cx.providers.Stamen.TonerLabels,zorder=2)
-    
-    #plt.xlabel('Longitude')
-    #plt.ylabel('Latitude')
-
-
-    ax.set_yticklabels([])
-    ax.set_xticklabels([])
-    ax.axes.get_xaxis().set_visible(False)
-    ax.set_xticks([])
-    ax.set_yticks([])
-
-    
-    #cb = plt.colorbar(sc)
-    plt.show()
-    
+    f = gpd.read_file('merger_2014_smaller.geojson')
+    print(f.head(5))
+    fs = f['geometry'].simplify(0.005)
+    fs_n = gpd.GeoDataFrame(f['YEAR'],geometry=fs)
+    fs_n.to_file('simplify_merger_data_2014.shp', driver='ESRI Shapefile')
