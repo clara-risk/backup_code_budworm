@@ -325,23 +325,21 @@ def byhex(df,referent,vx,vy,vbound_lower,vbound_upper,var,p_low,p_up):
         hdf = df[df['hex'] == hexcode] 
         if hexcode not in referent:
             val = float(hdf[var])
-            print(val) 
+            #print(val) 
             if val >= vbound_lower and val <= vbound_upper:
-                odds = 1 # 1 or 0?
-##            elif var == 'mj':
-##                odds = p(val)
-##                if odds >= 4:
-##                    print('check!') 
-##                    odds = 4
+                odds = 1 # 1 or 0? 
             else: 
                 odds = p(val)
                 if odds < 0: 
                     odds = 0
                 #if odds > 5:
                     #odds = 5
-            print(odds)
+            #print(odds)
             track_rat.append(odds)
-             
+            
+            
+
+            
 
     fdf = pd.DataFrame()
     fdf['spatial_odds'] = track_rat
@@ -350,7 +348,7 @@ def byhex(df,referent,vx,vy,vbound_lower,vbound_upper,var,p_low,p_up):
 ##    fdf['under'] = track_under
 ##    fdf['over'] = track_over
 
-    return track_rat
+    return track_rat 
     
 def get_comparison(df):
 
@@ -364,14 +362,12 @@ def get_comparison(df):
     df = df[df['age'] >= 70]
     df = df[df['age'] <= 79]
 
-    print(df)
-
     return list(df['hex']) 
         
 if __name__ == "__main__":
 
 
-    files = ['age','sbw_2021','Bf','Sw','Sb','min_temp_jan_daymet','soil_reproj','elev','cent_prox','hex_test']
+    files = ['age','sbw_2021','Bf','Sw','Sb','min_temp_jan_daymet','soil_reproj','elev','cent_prox','hex_1km']
     names = ['age','sbw','bf','sw','sb','mj','st','elev','cp','hex'] 
     pred = {}
     transformers = []
@@ -443,9 +439,11 @@ if __name__ == "__main__":
 
     print(hex_filter)
 
-    asm = gpd.read_file('grid_5000.shp').to_crs('EPSG:4326')
+    asm = gpd.read_file('grid_1000.shp') #.to_crs('EPSG:4326')
 
     hex_list = asm['id']
+
+    print(len(hex_list))
 
     elev_range = [0, 20, 40, 60, 80, 100, 120, 140, 160,\
                 180, 200, 220, 240, 260, 280, 300, 320, 340,\
@@ -502,20 +500,20 @@ if __name__ == "__main__":
              0.0342729177315767, 0.0356315601193639, 0.0360287776881405, 0.0389282715926391, 0.044161791849817,
              0.0456120189304549, 0.0299666424134806, 0.008484137391909, 0.0051261443677562, 0.0073673168796597,
              0.0078574064675025, 0.004589115528852, 0.0029739670864204, 0.0026414476851209, 0.0016063275148203]
+    
 
     hex_filter['cp_t'] = hex_filter['cp']*0.001
     dist = byhex(hex_filter,[],drange,dodds,0,5,'cp_t',0,300)
 
     jrange = [-29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17]
-    jodds = [0.0733935814402098, 0.1413794134405018, 0.6088524919897017, 0.9493083239590152, 0.943305807594558,
-             1.0427853900309725, 0.8562932131830445, 0.6516882099031535, 0.5851973994424255, 0.5149600851578118,
-             0.4886193895628263, 0.7170853282275094, 0.8944786483487306]
-
-
+    jodds = [3.7673728126068378, 1.7374397494145215, 0.6116233071486046, 0.4030079468821615,
+             0.3531316995329558, 0.279584486750518, 0.2157590864001274, 0.1260759117326016,
+             0.113508061240686, 0.1057474141066443, 0.1694503266403262, 0.4286629293841357,
+             0.256763257760892]
     
     jan = byhex(hex_filter,[],jrange,jodds,-26.37,-25.26,'mj',-29,-17)
 
-    normal_stand = get_comparison(hex_filter)
+    normal_stand = get_comparison(df)
     print(normal_stand)
 
     ones = list(np.ones(len(normal_stand)))
@@ -528,8 +526,8 @@ if __name__ == "__main__":
             all_other.append(hex_orig)
             nans.append(np.nan)
 
-    append_hex = normal_stand #+ all_other
-    normal_ones = ones #+ nans
+    append_hex = normal_stand + all_other
+    normal_ones = ones + nans
 
     ndf = pd.DataFrame()
     ndf['hex'] = append_hex
@@ -545,7 +543,8 @@ if __name__ == "__main__":
 
     #gdf['risk'] = elev + bf + age
     
-    asm = gpd.read_file('grid_5000.shp') #.to_crs('EPSG:4326')
+    asm = gpd.read_file('grid_1000.shp') #.to_crs('EPSG:4326')
+
 
     hex_codes = list(hex_filter['hex'])
 
@@ -566,19 +565,7 @@ if __name__ == "__main__":
     df_fix['hex'] = hex_codes + hfill
     df_fix['risk'] = joint_risk + rfill
     df_fix['risk_sa'] = joint_risk2 + rfill
-    df_fix['risk_elev'] = elev + rfill
-    df_fix['risk_bf'] = bf + rfill
-    df_fix['risk_sb'] = sb + rfill
-    df_fix['risk_age'] = age + rfill
-    df_fix['risk_mj'] = jan + rfill
-    df_fix['risk_cp'] = dist + rfill
-    
     df_fix['cp_t'] = list(hex_filter['cp_t']) + rfill
-    df_fix['elevation'] = list(hex_filter['elev']) + rfill
-    df_fix['jan_temp'] = list(hex_filter['mj']) + rfill
-    df_fix['Sb'] = list(hex_filter['sb']) + rfill
-    df_fix['Bf'] = list(hex_filter['bf']) + rfill
-    df_fix['age'] = list(hex_filter['age']) + rfill
     #df_fix = df_fix.sort_values(by='id')
 
     
@@ -588,8 +575,8 @@ if __name__ == "__main__":
     #asm = asm.merge(df_fix, on='id', how='outer')
     asm =  pd.merge(asm, df_fix, how="left", on=["hex"])
 
-    asm_norm =  pd.merge(asm, ndf, how="right", on=["hex"])
-    print(asm_norm)
+    asm_norm =  pd.merge(asm, ndf, how="left", on=["hex"])
+    print(asm)
     #asm['risk'] = df_fix['risk']
     #asm = asm.dropna(how='any')
 
@@ -674,12 +661,11 @@ if __name__ == "__main__":
     ax[1].set_ylim(ylim)    
     plt.show()
 
-    fig.savefig('march8_plots/hex5000_updated4.svg', format='svg', dpi=1300)
-    #fig.savefig('march8_plots/check_dpi3.eps', format='eps', dpi=1300)
+    fig.savefig('march8_plots/check_dpi4.svg', format='svg', dpi=1300)
+    fig.savefig('march8_plots/check_dpi4.eps', format='eps', dpi=1300)
 
 
-    asm.to_file('hex5000_extra_info_ref_4.shp', driver='ESRI Shapefile')
-    asm_norm.to_file('ref_pixels_5000_4.shp', driver='ESRI Shapefile')
+    asm.to_file('hex1000.shp', driver='ESRI Shapefile')
 
     
     

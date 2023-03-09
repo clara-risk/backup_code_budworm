@@ -277,8 +277,8 @@ if __name__ == "__main__":
     p60 = np.percentile(np.array(list(df['mj_abs'])),60)
     print(p40)
     print(p60)
-    auto_odds(df,-29,-16,1,'mj_abs',['cp','age','sw','sb','bf','st','elev','lat','lon'],'°C',p40,p60,\
-              'January Minimum Temperature',buffer=2)
+    auto_odds(df,-29,-16,1,'mj_abs',['cp','age','sw','sb','bf','st','lon'],'°C',p40,p60,\
+              'January Minimum Temperature',buffer=2)#'st','elev','lat','lon'
 
 ##    df['cp'] = df['cp']*0.001
 ##
@@ -286,7 +286,7 @@ if __name__ == "__main__":
 ##    p60 = np.percentile(np.array(list(df['cp'])),1)
 ##    print(p40)
 ##    print(p60)
-##    auto_odds(df,0,200,5,'cp',['mj','age','sw','sb','bf','st','elev','lat','lon'],'km',0,10,\
+##    auto_odds(df,0,300,5,'cp',['mj','age','sw','sb','bf','st','elev'],'km',0,5,\
 ##              'Distance from Outbreak Origin',buffer=5)
 
 

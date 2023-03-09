@@ -354,6 +354,7 @@ if __name__ == "__main__":
     
     df = pd.DataFrame(pred).dropna(how='any')
 
+
     for nam in names: 
 
         df = df[df[nam] != -3.4028234663852886e+38]
