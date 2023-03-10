@@ -173,7 +173,7 @@ def auto_odds(df,range1,range2,split,var,list_control,units,p40,p60,var_name,buf
     fin_df['upper_odds'] = vals_over+vals_over1
     fin_df['lower_odds'] = vals_under+vals_under1
 
-    fin_df.to_csv(var_name+'.csv',sep=',')
+    #fin_df.to_csv(var_name+'.csv',sep=',')
     
 if __name__ == "__main__":
 
@@ -251,9 +251,10 @@ if __name__ == "__main__":
 ##    print(p60)
 ##    auto_odds(df,0,int(max(df['bf'])-10),5,'bf',['cp','age','sw','sb','mj','st','elev','lat','lon'],'%',p40,p60,'Balsam Fir',buffer=5)
 
-##    p40 = np.percentile(np.array(list(df['elev'])),45)
-##    p60 = np.percentile(np.array(list(df['elev'])),55)
-##    auto_odds(df,0,550,20,'elev',['cp','age','sw','sb','mj','st','bf','lat','lon'],'m',p40,p60,'Elevation',buffer=20)
+    p40 = np.percentile(np.array(list(df['elev'])),45)
+    p60 = np.percentile(np.array(list(df['elev'])),55)
+    auto_odds(df,0,550,20,'elev',['cp','age','sw','sb','mj','st','bf','lat','lon'],'m',p40,p60,'Elevation',buffer=20)
+    fig.savefig('march8_plots/elev_highdef.svg', format='svg', dpi=1300)
 
     #df = df.sample(n=2000,random_state=1)
 ##    p40 = np.percentile(np.array(list(df['mj'])),45)
@@ -270,16 +271,16 @@ if __name__ == "__main__":
 ##    print(p60)
 ##    auto_odds(df,-28,-16,1,'mj',['cp','age','sw','sb','bf','st','elev','lat','lon'],'°C',p40,p60,\
 ##              'January Minimum Temperature',buffer=4)
-
-    df['mj_abs'] = df['mj']
-
-    p40 = np.percentile(np.array(list(df['mj_abs'])),40)
-    p60 = np.percentile(np.array(list(df['mj_abs'])),60)
-    print(p40)
-    print(p60)
-    auto_odds(df,-29,-16,1,'mj_abs',['cp','age','sw','sb','bf','st','lon'],'°C',p40,p60,\
-              'January Minimum Temperature',buffer=2)#'st','elev','lat','lon'
-
+##
+##    df['mj_abs'] = df['mj']
+##
+##    p40 = np.percentile(np.array(list(df['mj_abs'])),40)
+##    p60 = np.percentile(np.array(list(df['mj_abs'])),60)
+##    print(p40)
+##    print(p60)
+##    auto_odds(df,-29,-16,1,'mj_abs',['cp','age','sw','sb','bf','st','lon'],'°C',p40,p60,\
+##              'January Minimum Temperature',buffer=2)#'st','elev','lat','lon'
+##
 ##    df['cp'] = df['cp']*0.001
 ##
 ##    p40 = np.percentile(np.array(list(df['cp'])),0)

@@ -352,7 +352,26 @@ if __name__ == "__main__":
     pred['lat'] = Yi
 
     
-    df = pd.DataFrame(pred).dropna(how='any')
+    df = pd.DataFrame(pred) #.dropna(how='any')
+
+    fig, ax = plt.subplots(figsize=(15, 15))
+
+    na_map = gpd.read_file('NAMAP.shp')
+
+    plt.imshow(np.array(df['age']).reshape(row_num,col_num)[::-1])
+    na_map.plot(ax= ax, color='white', edgecolor='k', linewidth=2, zorder=10, alpha=0.1)
+
+    plt.gca().invert_yaxis()
+    cbar = plt.colorbar()
+    cbar.set_label(var_name)
+
+    #title = 'RF Interpolation for %s on %s' % (var_name, input_date)
+    #fig.suptitle(title, fontsize=14)
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+
+    plt.show()
+        
 
 
     for nam in names: 
@@ -383,7 +402,7 @@ if __name__ == "__main__":
     #auto_odds(df,20,int(max(df['bf'])-10),5,'bf',['cp','age','sb','sw','mj','st','elev','lat','lon'],'%',0,20,'Balsam Fir Abundance')
 
     #p40 = np.percentile(np.array(list(df['age'])),45)
-    p60 = np.percentile(np.array(list(df['st'])),50)
-    print(p60)
-    df = df[df['st'] != 0]
-    auto_odds_discrete(df,1,9,1,'st',['cp','sb','elev','sw','mj','age','bf','lat','lon'],'USDA Code',7,7,'Soil Texture',buffer=0)
+##    p60 = np.percentile(np.array(list(df['st'])),50)
+##    print(p60)
+##    df = df[df['st'] != 0]
+##    auto_odds_discrete(df,1,9,1,'st',['cp','sb','elev','sw','mj','age','bf','lat','lon'],'USDA Code',7,7,'Soil Texture',buffer=0)

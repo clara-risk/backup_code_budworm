@@ -359,6 +359,7 @@ def byhex(df,referent,vx,vy,vbound_lower,vbound_upper,var,p_low,p_up,units,var_n
     return track_rat
     
 def get_comparison(df):
+    from shapely.geometry import MultiPoint
 
     df = df[df['elev'] >= 261]
     df = df[df['elev'] <= 299]
@@ -369,8 +370,19 @@ def get_comparison(df):
     df = df[df['mj'] >= -26.37]
     df = df[df['age'] >= 70]
     df = df[df['age'] <= 79]
+    #df['coord'] = [Point(xy) for xy in zip(list(df['lon']), df['lat'])]
+    wkt_proj = 'PROJCRS["NAD_1983_Canada_Lambert",BASEGEOGCRS["NAD83",DATUM["North American Datum 1983",ELLIPSOID["GRS 1980",6378137,298.257222101004,LENGTHUNIT["metre",1]],ID["EPSG",6269]],PRIMEM["Greenwich",0,ANGLEUNIT["Degree",0.0174532925199433]]],CONVERSION["unnamed",METHOD["Lambert Conic Conformal (2SP)",ID["EPSG",9802]],PARAMETER["Latitude of false origin",0,ANGLEUNIT["Degree",0.0174532925199433],ID["EPSG",8821]],PARAMETER["Longitude of false origin",-95,ANGLEUNIT["Degree",0.0174532925199433],ID["EPSG",8822]],PARAMETER["Latitude of 1st standard parallel",49,ANGLEUNIT["Degree",0.0174532925199433],ID["EPSG",8823]],PARAMETER["Latitude of 2nd standard parallel",77,ANGLEUNIT["Degree",0.0174532925199433],ID["EPSG",8824]],PARAMETER["Easting at false origin",0,LENGTHUNIT["metre",1],ID["EPSG",8826]],PARAMETER["Northing at false origin",0,LENGTHUNIT["metre",1],ID["EPSG",8827]]],CS[Cartesian,2],AXIS["(E)",east,ORDER[1],LENGTHUNIT["metre",1,ID["EPSG",9001]]],AXIS["(N)",north,ORDER[2],LENGTHUNIT["metre",1,ID["EPSG",9001]]]]'
+    #df['geometry'] = MultiPoint(list(df['coord'].values))
+    gdf = gpd.GeoDataFrame(df,geometry=gpd.points_from_xy(df.lon, df.lat, crs=wkt_proj),crs=wkt_proj)
 
     print(df)
+
+    fig,ax = plt.subplots()
+
+    plt.scatter(df['lon'],df['lat'],c='r',s=2)
+    plt.show()
+
+    gdf.to_file('average_stand.shp', driver='ESRI Shapefile')
 
     return list(df['hex']) 
         
@@ -437,255 +449,9 @@ if __name__ == "__main__":
 ##    plt.scatter(df['lon'],df['lat'],c=df['hex'])
 ##    plt.show()
 
-    print(len(df))
-
-    print(df[df['hex'] == -1])
-    
-    df = df[df['hex'] != -1]
-
-    print(len(set(list(df['hex']))))
-    
-    hex_filter = df.groupby(['hex'],dropna=False).mean().reset_index()
-
-    print(hex_filter)
-
-    asm = gpd.read_file('grid_5000.shp').to_crs('EPSG:4326')
-
-    hex_list = asm['id']
-
-    elev_range = [0, 20, 40, 60, 80, 100, 120, 140, 160,\
-                180, 200, 220, 240, 260, 280, 300, 320, 340,\
-                360, 380, 400, 420, 440, 460, 480, 500, 520, 540]
-    elev_odds = [1.1237824125161196e-10, 1.2877791051882814e-119, 2.4318917628356207e-10,
-                 2.351301996995713e-15, 3.6453688496165293e-10, 0.3901096868484866, 0.880188332821613,
-                 1.2129130336105842, 1.1797945531305165, 0.8954568915079646, 0.7158946335770928,
-                 1.5539479090666426, 1.7185455374648009, 1.7432549707418925, 1.2699217053124323,
-                 1.6805501643285137, 1.727720063317128, 1.751242625444832,
-                 1.8062645696965811, 2.275187844809393, 3.252428673852006,
-                 4.387286578076808, 6.639516765992007, 9.785278649451428, 14.134687425947524,
-                 17.84988886858476, 18.326446960641963, 17.522541295164373]
-    
-    
-
-##    elev = byhex(hex_filter,[],elev_range,elev_odds,261,299,'elev',0,520,'m','Elevation')
-##
-##    brange = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45]
-##    
-##    bodds = [1.0357943703772252, 1.051165234687968, 1.0889626021127263, 1.2539491113889731,
-##             1.6338608346573915, 1.9861522557952824, 2.117731790640132, 2.9880256350759278,
-##             4.959697738191339, 5.369129003758281]
-##
-##    bf = byhex(hex_filter,[],brange,bodds,0,2,'bf',0,50,'%','Balsam Fir Abundance')
-##
-##    sb_range = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85]
-##    sb_odds = [0.4403197520854301, 0.5879129571213885, 0.8460708229366423, 0.9963299568691596, 1.08006534945437,
-##               1.013246952983177, 0.9865720411215158, 1.012556244066168, np.nan, 1.070434864069297, 1.0988974789406314,
-##               1.1414296869397431,1.2072813297681462, 1.2460066546765498, 1.2039247393020196, 1.141113337756659,
-##               1.1280279965717268, 1.1141625616072954]
-##    sb = byhex(hex_filter,[],sb_range,sb_odds,34,45,'sb',0,90,'%','Black Spruce Abundance')
-##
-##    arange = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]
-##    aodds = [0.1727002180482034, 0.1723182471491432, 0.2436916307320752, 0.3263790609957885,
-##             0.3919688855044393, 0.4968247633838836, 0.6937305113103779, 0.8223965979079845,
-##             1.1132992528771155, 1.1380693067242396,
-##             1.1164163204023465, 1.067729230927584, 1.007863563411918, 0.9205033160226128,
-##             0.9890150940355104, 1.063904738430273]
-##
-##    age = byhex(hex_filter,[],arange,aodds,70,79,'age',0,150,'Years','Stand Age')
-##
-##    drange = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125,
-##              130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230,
-##              235, 240, 245, 250, 255, 260, 265, 270, 275, 280, 285, 290, 295]
-##    dodds = [np.nan, 1.805610349591656, 1.0825281892434526, 0.8271625247472696, 0.7493039036941278,
-##             0.8003161127967241, 1.2387635708256446, 1.788244485493328, 2.010592562420054, 1.4911491891448323,
-##             0.7813701303975836, 0.5680045122761822, 0.7574321654836814, 1.0569719197273606, 1.3120882445626156,
-##             1.6018996093187678, 1.449481032423591, 1.133007732542073, 0.9705557618665503, 1.0923912007577192,
-##             0.9799736482509382, 0.6113736296683143, 0.4036169418722871, 0.3086294880040526, 0.3277434654201783,
-##             0.351727049491232, 0.2804900245803746, 0.2283600776406358, 0.2232149162685481, 0.2116749442330364,
-##             0.1535594635827436, 0.1107154412223294, 0.0954001506520868, 0.0887775978642481, 0.0849691424486035,
-##             0.074898768286377, 0.0559733790962377, 0.0424178157332847, 0.0404608254166939, 0.0409285325582169,
-##             0.0402070762602519, 0.0435341329546799, 0.038271284158634, 0.0292263927161831, 0.03045519894433,
-##             0.0342729177315767, 0.0356315601193639, 0.0360287776881405, 0.0389282715926391, 0.044161791849817,
-##             0.0456120189304549, 0.0299666424134806, 0.008484137391909, 0.0051261443677562, 0.0073673168796597,
-##             0.0078574064675025, 0.004589115528852, 0.0029739670864204, 0.0026414476851209, 0.0016063275148203]
-##
-##    hex_filter['cp_t'] = hex_filter['cp']*0.001
-##    dist = byhex(hex_filter,[],drange,dodds,0,5,'cp_t',0,300,'km','Distance from Outreak Centre')
-
-    jrange = [-29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17]
-    jodds = [0.0733935814402098, 0.1413794134405018, 0.6088524919897017, 0.9493083239590152, 0.943305807594558,
-             1.0427853900309725, 0.8562932131830445, 0.6516882099031535, 0.5851973994424255, 0.5149600851578118,
-             0.4886193895628263, 0.7170853282275094, 0.8944786483487306]
+    get_comparison(df)
 
 
-    
-    jan = byhex(hex_filter,[],jrange,jodds,-26.37,-25.26,'mj',-29,-16.5,'°C','January Minimum Temp.')
-
-    normal_stand = get_comparison(hex_filter)
-    print(normal_stand)
-
-    ones = list(np.ones(len(normal_stand)))
-
-    all_other = []
-    nans = [] 
-
-    for hex_orig in hex_list:
-        if hex_orig not in normal_stand:
-            all_other.append(hex_orig)
-            nans.append(np.nan)
-
-    append_hex = normal_stand #+ all_other
-    normal_ones = ones #+ nans
-
-    ndf = pd.DataFrame()
-    ndf['hex'] = append_hex
-    ndf['lookup_norm'] = normal_ones
-    
-    
-    fig, ax = plt.subplots(1,2)
-
-    gdf = gpd.read_file('NAMAP.shp') #.to_crs('EPSG:9001')
-    all_other = gdf[gdf['postal'] != 'ON']
-    water = gpd.read_file('LAKE.shp')
-    water2 = gpd.read_file('ocean_box_corr.shp')
-
-    #gdf['risk'] = elev + bf + age
-    
-    asm = gpd.read_file('grid_5000.shp') #.to_crs('EPSG:4326')
-
-    hex_codes = list(hex_filter['hex'])
-
-    joint_risk = np.prod(np.vstack([elev,bf,sb,age,jan]), axis=0).tolist()
-    joint_risk2 = np.prod(np.vstack([elev,bf,sb,age,jan,dist]), axis=0).tolist()
-    print(joint_risk2)
-
-    hfill=[]
-    rfill = [] 
-
-    for hex_orig in hex_list:
-        if hex_orig not in hex_codes:
-            hfill.append(hex_orig)
-            rfill.append(np.nan)
-
-
-    df_fix = pd.DataFrame()
-    df_fix['hex'] = hex_codes + hfill
-    df_fix['risk'] = joint_risk + rfill
-    df_fix['risk_sa'] = joint_risk2 + rfill
-    df_fix['risk_elev'] = elev + rfill
-    df_fix['risk_bf'] = bf + rfill
-    df_fix['risk_sb'] = sb + rfill
-    df_fix['risk_age'] = age + rfill
-    df_fix['risk_mj'] = jan + rfill
-    df_fix['risk_cp'] = dist + rfill
-    
-    df_fix['cp_t'] = list(hex_filter['cp_t']) + rfill
-    df_fix['elevation'] = list(hex_filter['elev']) + rfill
-    df_fix['jan_temp'] = list(hex_filter['mj']) + rfill
-    df_fix['Sb'] = list(hex_filter['sb']) + rfill
-    df_fix['Bf'] = list(hex_filter['bf']) + rfill
-    df_fix['age'] = list(hex_filter['age']) + rfill
-    #df_fix = df_fix.sort_values(by='id')
-
-    
-    #df_fix.cp_t[df_fix.hex ==336] = 10000000000
-    print(df_fix)
-    asm['hex'] = asm['id']
-    #asm = asm.merge(df_fix, on='id', how='outer')
-    asm =  pd.merge(asm, df_fix, how="left", on=["hex"])
-
-    asm_norm =  pd.merge(asm, ndf, how="right", on=["hex"])
-    print(asm_norm)
-    #asm['risk'] = df_fix['risk']
-    #asm = asm.dropna(how='any')
-
-    a = asm.plot('risk',ax=ax[0],cmap='RdGy_r',edgecolor='k',linewidth=0.25,
-             zorder=14, alpha=0.5, legend=False)
-
-    gdf.plot(ax=ax[0],facecolor="none",edgecolor='k',linewidth=0.5,
-             zorder=15, alpha=1)
-    water.plot(ax=ax[0],facecolor="k",edgecolor='k',linewidth=0.5,
-             zorder=17, alpha=1)
-    water2.plot(ax=ax[0],facecolor="k",edgecolor='k',linewidth=0.5,
-             zorder=17, alpha=1)
-    all_other.plot(ax=ax[0],facecolor="#FFFFFF",edgecolor='k',linewidth=0.5,
-             zorder=16, alpha=1)
-    a = asm_norm.plot('lookup_norm',ax=ax[0],facecolor="none",edgecolor='k',linewidth=1,
-             zorder=15, alpha=0.5, legend=False)
-    #ax[0].set_title('A')
-
-    a = asm.plot('risk_sa',ax=ax[1],cmap='RdGy_r',edgecolor='k',linewidth=0.25,
-             zorder=14, alpha=0.5, legend=False,vmin=asm.risk_sa.min(), vmax=asm.risk_sa.max())
-    a = asm_norm.plot('lookup_norm',ax=ax[1],facecolor="none",edgecolor='k',linewidth=1,
-             zorder=15, alpha=0.5, legend=False)
-
-    gdf.plot(ax=ax[1],facecolor="none",edgecolor='k',linewidth=0.5,
-             zorder=16, alpha=1)
-    water.plot(ax=ax[1],facecolor="k",edgecolor='k',linewidth=0.5,
-             zorder=17, alpha=1)
-    water2.plot(ax=ax[1],facecolor="k",edgecolor='k',linewidth=0.5,
-             zorder=17, alpha=1)
-    all_other.plot(ax=ax[1],facecolor="#FFFFFF",edgecolor='k',linewidth=0.5,
-             zorder=16, alpha=1)
-    #ax[1].set_title('B')
-
-    ax[0].set_yticklabels([])
-    ax[0].set_xticklabels([])
-    ax[0].axes.get_xaxis().set_visible(False)
-    ax[0].set_xticks([])
-    ax[0].set_yticks([])
-
-    ax[1].set_yticklabels([])
-    ax[1].set_xticklabels([])
-    ax[1].axes.get_xaxis().set_visible(False)
-    ax[1].set_xticks([])
-    ax[1].set_yticks([])
-
-    import matplotlib.colors as colors
-
-    norm = colors.Normalize(vmin=asm.risk.min(), vmax=asm.risk.max())
-    cbar = plt.cm.ScalarMappable(norm=norm, cmap='RdGy_r')
-
-    # add colorbar
-    ax_cbar = fig.colorbar(cbar, ax=ax[0],fraction=0.046, pad=0.04)
-    # add label for the colorbar
-    #ax_cbar.set_label('Odds Ratio')
-
-    norm = colors.Normalize(vmin=asm.risk_sa.min(), vmax=asm.risk_sa.max())
-    cbar = plt.cm.ScalarMappable(norm=norm, cmap='RdGy_r')
-
-    # add colorbar
-    ax_cbar = fig.colorbar(cbar, ax=ax[1],fraction=0.046, pad=0.04)
-    # add label for the colorbar
-    ax_cbar.set_label('Odds Ratio')
-
-    for axes in ax[:2]:
-        axes.set_aspect(1)
-
-
-    xlim = ([asm.total_bounds[0]-40000,  asm.total_bounds[2]+40000])
-    ylim = ([asm.total_bounds[1]-1,  asm.total_bounds[3]+1])
-
-    ax[0].spines["top"].set_linewidth(1.25)
-    ax[0].spines["left"].set_linewidth(1.25)
-    ax[0].spines["bottom"].set_linewidth(1.25)
-    ax[0].spines["right"].set_linewidth(1.25)
-    ax[1].spines["top"].set_linewidth(1.25)
-    ax[1].spines["left"].set_linewidth(1.25)
-    ax[1].spines["bottom"].set_linewidth(1.25)
-    ax[1].spines["right"].set_linewidth(1.25)
-    ax[0].set_xlim(xlim)
-    ax[0].set_ylim(ylim)
-    ax[1].set_xlim(xlim)
-    ax[1].set_ylim(ylim)    
-    plt.show()
-
-    fig.savefig('march8_plots/hex5000_updated4.svg', format='svg', dpi=1300)
-    #fig.savefig('march8_plots/check_dpi3.eps', format='eps', dpi=1300)
-
-
-    asm.to_file('hex5000_extra_info_ref_4.shp', driver='ESRI Shapefile')
-    asm_norm.to_file('ref_pixels_5000_4.shp', driver='ESRI Shapefile')
 
     
     
